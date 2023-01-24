@@ -1,121 +1,91 @@
 #include "sort.h"
 
 /**
- * swap_list - swaps the elements of the list
- *
- * @ptr1: first pointer
- * @ptr2: second pointer
- * @n: n is 0 for increase, n is 1 for decrease
- * Return: no return
+ * swap_backward - swap next node and actuall
+ * @cursor: current node position
+ * @list: list to sort
  */
-void swap_list(listint_t **ptr1, listint_t **ptr2, int n)
+void swap_backward(listint_t **cursor, listint_t **list)
 {
-	listint_t *aux, *tmp;
+	listint_t *current, *next, *prev, *p_p;
 
-	aux = *ptr1;
-	tmp = *ptr2;
+	current = *cursor;
+	prev = current->prev;
+	next = current->next;
+	p_p = prev->prev;
+	current->next = prev;
+	current->prev = p_p;
 
-	aux->next = tmp->next;
-	tmp->prev = aux->prev;
-
-	if (tmp->next)
-		tmp->next->prev = aux;
-
-	if (aux->prev)
-		aux->prev->next = tmp;
-
-	aux->prev = tmp;
-	tmp->next = aux;
-
-	if (n == 0)
-		*ptr1 = tmp;
-	else
-		*ptr2 = aux;
+	prev->next = next;
+	next->prev = prev;
+	prev->prev = current;
+	if (p_p)
+		p_p->next = current;
+	if (current->prev == NULL)
+		*list = current;
+	current = current->next;
+	print_list(*list);
+	*cursor = current;
 }
 
 /**
- * increase_sort - move the bigger numbers to the end
- *
- * @ptr: pointer to the bigger number
- * @limit: limit of the list
- * @list: list of integers
- * Return: no return
+ * swap_forward - swap next node and actuall
+ * @cursor: current node position
+ * @list: list to sort
  */
-void increase_sort(listint_t **ptr, listint_t **limit, listint_t **list)
+void swap_forward(listint_t **cursor, listint_t **list)
 {
-	listint_t *aux;
+	listint_t *current, *next, *prev, *n_n;
 
-	aux = *ptr;
-
-	while (aux != *limit && aux->next != *limit)
-	{
-		if (aux->n > aux->next->n)
-		{
-			swap_list(&aux, &(aux->next), 0);
-			if (aux->prev == NULL)
-				*list = aux;
-			print_list(*list);
-		}
-		aux = aux->next;
-	}
-
-	*limit = aux;
-	*ptr = aux;
+	current = *cursor;
+	next = current->next;
+	prev = current->prev;
+	n_n = next->next;
+	current->next = n_n;
+	current->prev = next;
+	if (prev)
+		prev->next = next;
+	next->prev = prev;
+	next->next = current;
+	if (n_n)
+		n_n->prev = current;
+	current = current->prev;
+	if (current->prev == NULL)
+		*list = current;
+	print_list(*list);
+	*cursor = current;
 }
 
 /**
- * decrease_sort - moves the smaller numbers to the start
- *
- * @ptr: pointer to the smaller number
- * @limit: limit of the list
- * @list: list of integers
- * Return: no return
- */
-void decrease_sort(listint_t **ptr, listint_t **limit, listint_t **list)
-{
-	listint_t *aux;
-
-	aux = *ptr;
-
-	while (aux != *limit && aux->prev != *limit)
-	{
-		if (aux->n < aux->prev->n)
-		{
-			swap_list(&(aux->prev), &aux, 1);
-			if (aux->prev->prev == NULL)
-				*list = aux->prev;
-			print_list(*list);
-		}
-		aux = aux->prev;
-	}
-
-	*limit = aux;
-	*ptr = aux;
-}
-
-/**
- * cocktail_sort_list - sorts a doubly linked list
- * of integers in ascending order using the
- * Cocktail shaker sort algorithm
- *
- * @list: head of the linked list
- * Return: no return
+ * cocktail_sort_list - function that sorts a linked list using coctail
+ * @list: pointer to first node in linked list
  */
 void cocktail_sort_list(listint_t **list)
 {
-	listint_t *limit1, *limit2, *ptr;
+	listint_t *cursor;
+	int cont = 1;
 
-	if (list == NULL)
+	if (list == NULL || *list == NULL)
 		return;
 
-	if (*list == NULL)
-		return;
-
-	limit1 = limit2 = NULL;
-	ptr = *list;
-
-	do {
-		increase_sort(&ptr, &limit1, list);
-		decrease_sort(&ptr, &limit2, list);
-	} while (limit1 != limit2);
+	while (cont != 0)
+	{
+		cont = 0;
+		for (cursor = *list; cursor->next != NULL; cursor = cursor->next)
+		{
+			if (cursor->n > cursor->next->n)
+			{
+				swap_forward(&cursor, list);
+				cont++;
+			}
+		}
+		for (; cursor->prev != NULL; cursor = cursor->prev)
+		{
+			if (cursor->n < cursor->prev->n)
+			{
+				swap_backward(&cursor, list);
+				cont++;
+			}
+		}
+	}
 }
